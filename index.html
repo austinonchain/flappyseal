@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <title>Flappy Seal</title>
     <style>
+        *{
+            margin:0;
+            padding:0;
+        }
         body {
             display: flex;
             justify-content: center;
@@ -21,7 +25,7 @@
 
     <meta name="title" content="Flappy Seal">
     <meta name="description" content="Dive into the ocean and flap your way through obstacles in Flappy Seal! A fun and challenging arcade game for all ages.">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -46,6 +50,8 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
 
         // Responsive canvas sizing
         function resizeCanvas() {
@@ -62,12 +68,14 @@
         icebergTopImg.src = 'img/icicle_top.png';
         const icebergBottomImg = new Image();
         icebergBottomImg.src = 'img/icicle_bottom.png';
+        const backgroundImg = new Image();
+        backgroundImg.src = 'img/background.png';
 
         // Game constants
         const GRAVITY = 0.5;
         const FLAP = -10;
         const ICEBERG_WIDTH = 100;
-        const ICEBERG_GAP = 250;
+        const ICEBERG_GAP = 275;
         const ICEBERG_SPEED = 5;
 
         // Detect if device is mobile (supports touch)
@@ -78,8 +86,8 @@
             x: canvas.width * 0.25,
             y: canvas.height / 2,
             velocity: 0,
-            width: 100,
-            height: 100
+            width: canvas.width * 0.125, // 50/800 = 0.0625 (original ratio)
+            height: canvas.width * 0.125 // Keep square aspect ratio
         };
         let icebergs = [];
         let score = 0;
@@ -147,8 +155,7 @@
 
         // Draw game
         function draw() {
-            ctx.fillStyle = '#00bfff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
 
             ctx.drawImage(sealImg, seal.x, seal.y, seal.width, seal.height);
 
@@ -177,6 +184,8 @@
             seal.x = canvas.width * 0.25;
             seal.y = canvas.height / 2;
             seal.velocity = 0;
+            seal.width = canvas.width * 0.125; // Reset width
+            seal.height = canvas.width * 0.125; // Reset height
             icebergs = [];
             score = 0;
             gameOver = false;
@@ -194,7 +203,7 @@
         let imagesLoaded = 0;
         function checkImagesLoaded() {
             imagesLoaded++;
-            if (imagesLoaded === 3) {
+            if (imagesLoaded === 4) {
                 spawnIceberg();
                 gameLoop();
             }
@@ -202,6 +211,7 @@
         sealImg.onload = checkImagesLoaded;
         icebergTopImg.onload = checkImagesLoaded;
         icebergBottomImg.onload = checkImagesLoaded;
+        backgroundImg.onload = checkImagesLoaded;
     </script>
 </body>
 </html>
