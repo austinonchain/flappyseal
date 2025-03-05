@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Seal the Deal</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: blue; /* Ocean blue */
+        }
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+
+    <meta name="title" content="Flappy Seal">
+    <meta name="description" content="Dive into the ocean and flap your way through obstacles in Flappy Seal! A fun and challenging arcade game for all ages.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Flappy Seal">
+    <meta property="og:description" content="Dive into the ocean and flap your way through obstacles in Flappy Seal! A fun and challenging arcade game for all ages.">
+    <meta property="og:image" content="img/cover.png">
+    <meta property="og:image:alt" content="Flappy Seal cover image">
+    <meta property="og:url" content="https://flappyseal.com">
+    <meta property="og:site_name" content="Flappy Seal">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Flappy Seal">
+    <meta name="twitter:description" content="Dive into the ocean and flap your way through obstacles in Flappy Seal! A fun and challenging arcade game for all ages.">
+    <meta name="twitter:image" content="img/cover.png">
+    <meta name="twitter:image:alt" content="Flappy Seal cover image">
+    <meta name="twitter:site" content="@austinonchain">
+
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Load images
+        const sealImg = new Image();
+        sealImg.src = 'img/seal.png'; // Cartoon seal image
+        const icebergTopImg = new Image();
+        icebergTopImg.src = 'img/icicle_top.png'; // Downward-pointing iceberg for top
+        const icebergBottomImg = new Image();
+        icebergBottomImg.src = 'img/icicle_bottom.png'; // Upward-pointing iceberg for bottom
+
+        // Game constants
+        const GRAVITY = 0.5;
+        const FLAP = -10;
+        const ICEBERG_WIDTH = 100;
+        const ICEBERG_GAP = 275;
+        const ICEBERG_SPEED = 5;
+
+        // Game state
+        let seal = {
+            x: 200,
+            y: 300,
+            velocity: 0,
+            width: 100,
+            height: 100
+        };
+        let icebergs = [];
+        let score = 0;
+        let gameOver = false;
+
+        // Spawn initial iceberg
+        function spawnIceberg() {
+            const height = Math.random() * (canvas.height - ICEBERG_GAP - 200) + 100;
+            icebergs.push({
+                x: canvas.width,
+                top: height - canvas.height,
+                bottom: height + ICEBERG_GAP
+            });
+        }
+
+        // Handle input
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !gameOver) {
+                seal.velocity = FLAP;
+            }
+            if (e.code === 'KeyR' && gameOver) {
+                resetGame();
+            }
+        });
+
+        // Update game state
+        function update() {
+            if (gameOver) return;
+
+            // Update seal
+            seal.velocity += GRAVITY;
+            seal.y += seal.velocity;
+
+            // Keep seal in bounds
+            if (seal.y < 0) seal.y = 0;
+            if (seal.y + seal.height > canvas.height) {
+                seal.y = canvas.height - seal.height;
+                gameOver = true;
+            }
+
+            // Move and spawn icebergs
+            icebergs.forEach(iceberg => {
+                iceberg.x -= ICEBERG_SPEED;
+            });
+            if (icebergs.length && icebergs[0].x < -ICEBERG_WIDTH) {
+                icebergs.shift();
+                score++;
+            }
+            if (Math.random() < 0.02 && (!icebergs.length || icebergs[icebergs.length - 1].x < canvas.width - 400)) {
+                spawnIceberg();
+            }
+
+            // Collision detection
+            icebergs.forEach(iceberg => {
+                if (seal.x + seal.width > iceberg.x && seal.x < iceberg.x + ICEBERG_WIDTH &&
+                    (seal.y < iceberg.top + canvas.height || seal.y + seal.height > iceberg.bottom)) {
+                    gameOver = true;
+                }
+            });
+        }
+
+        // Draw game
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#00bfff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw seal
+            ctx.drawImage(sealImg, seal.x, seal.y, seal.width, seal.height);
+
+            // Draw icebergs with separate images
+            icebergs.forEach(iceberg => {
+                // Top iceberg (downward-pointing)
+                ctx.drawImage(icebergTopImg, iceberg.x, 0, ICEBERG_WIDTH, iceberg.top + canvas.height);
+                // Bottom iceberg (upward-pointing)
+                ctx.drawImage(icebergBottomImg, iceberg.x, iceberg.bottom, ICEBERG_WIDTH, canvas.height - iceberg.bottom);
+            });
+
+            // Draw score
+            ctx.fillStyle = '#000000';
+            ctx.font = '24px Arial';
+            ctx.fillText(`Score: ${score}`, 10, 30);
+
+            // Game over text
+            if (gameOver) {
+                ctx.fillStyle = 'darkblue';
+                ctx.font = '48px Arial';
+                ctx.fillText('Game Over!', canvas.width / 2 - 120, canvas.height / 2 - 24);
+                ctx.font = '24px Arial';
+                ctx.fillText('Press R to Restart', canvas.width / 2 - 80, canvas.height / 2 + 20);
+            }
+        }
+
+        // Reset game
+        function resetGame() {
+            seal.y = 300;
+            seal.velocity = 0;
+            icebergs = [];
+            score = 0;
+            gameOver = false;
+            spawnIceberg();
+        }
+
+        // Game loop
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Start game
+        spawnIceberg();
+        gameLoop();
+    </script>
+</body>
+</html>
