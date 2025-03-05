@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Seal the Deal</title>
+    <title>Flappy Seal</title>
     <style>
         body {
             display: flex;
@@ -14,6 +14,8 @@
         }
         canvas {
             border: 1px solid black;
+            max-width: 100%;
+            max-height: 100%;
         }
     </style>
 
@@ -40,30 +42,38 @@
 
 </head>
 <body>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <canvas id="gameCanvas"></canvas>
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
+        // Responsive canvas sizing
+        function resizeCanvas() {
+            canvas.width = Math.min(window.innerWidth, 800); // Max width 800
+            canvas.height = Math.min(window.innerHeight, 600); // Max height 600
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
         // Load images
         const sealImg = new Image();
-        sealImg.src = 'img/seal.png'; // Cartoon seal image
+        sealImg.src = 'img/seal.png';
         const icebergTopImg = new Image();
-        icebergTopImg.src = 'img/icicle_top.png'; // Downward-pointing iceberg for top
+        icebergTopImg.src = 'img/icicle_top.png';
         const icebergBottomImg = new Image();
-        icebergBottomImg.src = 'img/icicle_bottom.png'; // Upward-pointing iceberg for bottom
+        icebergBottomImg.src = 'img/icicle_bottom.png';
 
         // Game constants
         const GRAVITY = 0.5;
         const FLAP = -10;
         const ICEBERG_WIDTH = 100;
-        const ICEBERG_GAP = 275;
+        const ICEBERG_GAP = 250;
         const ICEBERG_SPEED = 5;
 
         // Game state
         let seal = {
             x: 200,
-            y: 300,
+            y: canvas.height / 2,
             velocity: 0,
             width: 100,
             height: 100
@@ -82,7 +92,7 @@
             });
         }
 
-        // Handle input
+        // Input handling (keyboard + touch)
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space' && !gameOver) {
                 seal.velocity = FLAP;
@@ -91,23 +101,28 @@
                 resetGame();
             }
         });
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (!gameOver) {
+                seal.velocity = FLAP;
+            } else {
+                resetGame();
+            }
+        });
 
         // Update game state
         function update() {
             if (gameOver) return;
 
-            // Update seal
             seal.velocity += GRAVITY;
             seal.y += seal.velocity;
 
-            // Keep seal in bounds
             if (seal.y < 0) seal.y = 0;
             if (seal.y + seal.height > canvas.height) {
                 seal.y = canvas.height - seal.height;
                 gameOver = true;
             }
 
-            // Move and spawn icebergs
             icebergs.forEach(iceberg => {
                 iceberg.x -= ICEBERG_SPEED;
             });
@@ -119,7 +134,6 @@
                 spawnIceberg();
             }
 
-            // Collision detection
             icebergs.forEach(iceberg => {
                 if (seal.x + seal.width > iceberg.x && seal.x < iceberg.x + ICEBERG_WIDTH &&
                     (seal.y < iceberg.top + canvas.height || seal.y + seal.height > iceberg.bottom)) {
@@ -130,39 +144,32 @@
 
         // Draw game
         function draw() {
-            // Clear canvas
             ctx.fillStyle = '#00bfff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw seal
             ctx.drawImage(sealImg, seal.x, seal.y, seal.width, seal.height);
 
-            // Draw icebergs with separate images
             icebergs.forEach(iceberg => {
-                // Top iceberg (downward-pointing)
                 ctx.drawImage(icebergTopImg, iceberg.x, 0, ICEBERG_WIDTH, iceberg.top + canvas.height);
-                // Bottom iceberg (upward-pointing)
                 ctx.drawImage(icebergBottomImg, iceberg.x, iceberg.bottom, ICEBERG_WIDTH, canvas.height - iceberg.bottom);
             });
 
-            // Draw score
             ctx.fillStyle = '#000000';
             ctx.font = '24px Arial';
             ctx.fillText(`Score: ${score}`, 10, 30);
 
-            // Game over text
             if (gameOver) {
-                ctx.fillStyle = 'darkblue';
+                ctx.fillStyle = 'blue';
                 ctx.font = '48px Arial';
                 ctx.fillText('Game Over!', canvas.width / 2 - 120, canvas.height / 2 - 24);
                 ctx.font = '24px Arial';
-                ctx.fillText('Press R to Restart', canvas.width / 2 - 80, canvas.height / 2 + 20);
+                ctx.fillText('Tap to Restart', canvas.width / 2 - 80, canvas.height / 2 + 20);
             }
         }
 
         // Reset game
         function resetGame() {
-            seal.y = 300;
+            seal.y = canvas.height / 2;
             seal.velocity = 0;
             icebergs = [];
             score = 0;
@@ -177,9 +184,18 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Start game
-        spawnIceberg();
-        gameLoop();
+        // Start game after images load
+        let imagesLoaded = 0;
+        function checkImagesLoaded() {
+            imagesLoaded++;
+            if (imagesLoaded === 3) {
+                spawnIceberg();
+                gameLoop();
+            }
+        }
+        sealImg.onload = checkImagesLoaded;
+        icebergTopImg.onload = checkImagesLoaded;
+        icebergBottomImg.onload = checkImagesLoaded;
     </script>
 </body>
 </html>
