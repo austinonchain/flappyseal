@@ -86,8 +86,8 @@
             x: canvas.width * 0.25,
             y: canvas.height / 2,
             velocity: 0,
-            width: canvas.width * 0.125, // 50/800 = 0.0625 (original ratio)
-            height: canvas.width * 0.125 // Keep square aspect ratio
+            width: 100, // 50/800 = 0.0625 (original ratio)
+            height: 100 // Keep square aspect ratio
         };
         let icebergs = [];
         let score = 0;
@@ -184,8 +184,8 @@
             seal.x = canvas.width * 0.25;
             seal.y = canvas.height / 2;
             seal.velocity = 0;
-            seal.width = canvas.width * 0.125; // Reset width
-            seal.height = canvas.width * 0.125; // Reset height
+            seal.width = 100; // Reset width
+            seal.height = 100; // Reset height
             icebergs = [];
             score = 0;
             gameOver = false;
